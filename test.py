@@ -310,3 +310,109 @@ class Coordinator:
 
 def get_coordinator() -> Coordinator:
     return Coordinator()
+
+class MockCoordinator:
+    def __init__(self):
+        from datetime import datetime
+        # Use the real Coordinator but monkey-patch chat_with_context
+        from academic_ai_coordinator_rag import Coordinator, AssistantState
+        self.coord = Coordinator(state=AssistantState())
+        
+        # Monkey-patch chat_with_context to return a predictable response
+        def mock_chat_with_context(docs: List[str], question: str) -> str:
+            # For testing, return a simple response indicating the question processed
+            return f"Processed question: {question}"
+        
+        # Apply monkey patch
+        self.coord.chat_with_context = mock_chat_with_context
+        # Also patch corrective_rag speculative etc. to use the mock chat
+        self.coord.corrective_rag = lambda q: f"Corrected: {q}"
+        self.coord.speculative_rag = lambda q: f"Speculative: {q}"
+        self.coord.agentic_rag = lambda q: f"Agentic: {q}"
+        self.coord.single_router_rag = lambda q: f"Single-Router: {q}"
+        self.coord.multi_agent_rag = lambda q: f"Multi-Agent: {q}"
+        self.coord.self_reflective_rag = lambda q: f"Self-Reflective: {q}"
+        self.coord.self_route_rag = lambda q: f"Self-Route: {q}"
+        self.coord.graph_rag = lambda q: f"Graph: {q}"
+
+    def process(self, user_request: str, profile: Dict[str, Any] = None) -> Dict[str, Any]:
+        return self.coord.process_request(user_request, student_profile=profile)
+
+
+# Define 10 test cases focused on types of Machine Learning
+test_cases = [
+    {"id": 1, "query": "rag:agentic:What is supervised learning?", "description": "Querying definition of supervised learning."},
+    {"id": 2, "query": "rag:agentic:Explain unsupervised learning with example.", "description": "Asking for unsupervised learning explanation."},
+    {"id": 3, "query": "rag:agentic:Describe reinforcement learning workflow.", "description": "Requesting reinforcement learning description."},
+    {"id": 4, "query": "rag:agentic:What is semi-supervised learning?", "description": "Querying semi-supervised learning concept."},
+    {"id": 5, "query": "rag:agentic:Define self-supervised learning.", "description": "Asking about self-supervised learning."},
+    {"id": 6, "query": "rag:agentic:Explain transfer learning and its applications.", "description": "Requesting transfer learning explanation."},
+    {"id": 7, "query": "rag:agentic:What is online learning in ML?", "description": "Querying online learning concept."},
+    {"id": 8, "query": "rag:agentic:Describe batch learning vs online learning.", "description": "Comparison of batch vs online learning."},
+    {"id": 9, "query": "rag:agentic:Explain active learning and its benefits.", "description": "Asking about active learning."},
+    {"id": 10, "query": "rag:agentic:What is deep learning and how does it differ from traditional ML?", "description": "Querying deep learning vs traditional ML."},
+]
+
+# Build a DataFrame to show test definitions
+df_tests = pd.DataFrame(test_cases)
+import ace_tools as tools; tools.display_dataframe_to_user(name="ML Types Test Cases", dataframe=df_tests)
+
+# Define unittest TestCase
+class TestMLTypeQueries(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mock_coord = MockCoordinator()
+
+    def test_supervised_learning(self):
+        resp = self.mock_coord.process("rag:agentic:What is supervised learning?")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: What is supervised learning?", resp["messages"][-1]["content"])
+
+    def test_unsupervised_learning(self):
+        resp = self.mock_coord.process("rag:agentic:Explain unsupervised learning with example.")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: Explain unsupervised learning with example.", resp["messages"][-1]["content"])
+
+    def test_reinforcement_learning(self):
+        resp = self.mock_coord.process("rag:agentic:Describe reinforcement learning workflow.")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: Describe reinforcement learning workflow.", resp["messages"][-1]["content"])
+
+    def test_semi_supervised_learning(self):
+        resp = self.mock_coord.process("rag:agentic:What is semi-supervised learning?")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: What is semi-supervised learning?", resp["messages"][-1]["content"])
+
+    def test_self_supervised_learning(self):
+        resp = self.mock_coord.process("rag:agentic:Define self-supervised learning.")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: Define self-supervised learning.", resp["messages"][-1]["content"])
+
+    def test_transfer_learning(self):
+        resp = self.mock_coord.process("rag:agentic:Explain transfer learning and its applications.")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: Explain transfer learning and its applications.", resp["messages"][-1]["content"])
+
+    def test_online_learning(self):
+        resp = self.mock_coord.process("rag:agentic:What is online learning in ML?")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: What is online learning in ML?", resp["messages"][-1]["content"])
+
+    def test_batch_vs_online_learning(self):
+        resp = self.mock_coord.process("rag:agentic:Describe batch learning vs online learning.")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: Describe batch learning vs online learning.", resp["messages"][-1]["content"])
+
+    def test_active_learning(self):
+        resp = self.mock_coord.process("rag:agentic:Explain active learning and its benefits.")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: Explain active learning and its benefits.", resp["messages"][-1]["content"])
+
+    def test_deep_learning(self):
+        resp = self.mock_coord.process("rag:agentic:What is deep learning and how does it differ from traditional ML?")
+        self.assertTrue(resp["success"])
+        self.assertIn("Processed question: What is deep learning and how does it differ from traditional ML?", resp["messages"][-1]["content"])
+
+# Run tests and capture results
+if __name__ == "__main__":
+    unittest.main(argv=['first-arg-is-ignored'], exit=False)
